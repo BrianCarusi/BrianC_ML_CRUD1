@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const Product = require('../data/product');
+const {readJSON,writeJSON} = require("../data/read_modify")
 
 const productsFilePath = path.join(__dirname, '../data/productsDataBase.json');
 const products = JSON.parse(fs.readFileSync(productsFilePath, 'utf-8'));
@@ -26,19 +28,14 @@ const controller = {
 	// Create -  Method to store
 	store: (req, res) => {
 
-
-			 const sendString = `--name :${ req.body.name}--
-			 \n--Price:
-			 ${ req.body.price}--
-			 \n--Discount:
-			 ${req.body.discount}--
-			 \n--Category:
-			 ${req.body.category}--
-			 \n--Description:
-			 ${req.body.description}`
-
+		const newProduct = new Product(req.body)
+		newProduct.image = req.file.originalname
+        const allProducts = readJSON("productsDataBase.json")
+		allProducts.push(newProduct)
+		writeJSON(allProducts,"productsDataBase.json")
 	
-		res.send(sendString)
+		res.send('Producto Creado')
+
 	},
 
 	// Update - Form to edit
@@ -49,20 +46,29 @@ const controller = {
 	},
 	// Update - Method to update
 	update: (req, res) => {
-		let name = req.body.name
-		res.send("updateado"+" "+name)
+		const { name, price, discount, description, category, image} = req.body;
+		
+		const productModify = products.map(product => {
+			if (product.id === +req.params.id) {
+				product.name = name.trim();
+				product.price = +price;
+				product.discount = +discount;
+				product.category = category;
+				product.description = description.trim();
+				product.image= req.file.originalname;
+			}
+			return product
+		});
+		fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 3), 'utf8');
+		return res.redirect('/products');
 	},
 
 	// Delete - Delete one product from DB
-	destroy : (req, res) => {
-		try{
-		let id = req.params.id
-		console.log(id)
-		}
-		catch(err){
-			console.log("error")
-		}
-		res.send("Producto eliminado")
+	destroy: (req, res) => {
+
+		const productsModify = products.filter(product => product.id != +req.params.id);
+		fs.writeFileSync(productsFilePath, JSON.stringify(productsModify, null, 3), 'utf8');
+		return res.redirect('/products');
 	}
 };
 
