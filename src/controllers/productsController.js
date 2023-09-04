@@ -34,7 +34,7 @@ const controller = {
 		allProducts.push(newProduct)
 		writeJSON(allProducts,"productsDataBase.json")
 	
-		res.send('Producto Creado')
+		res.send(req.file)
 
 	},
 
@@ -46,23 +46,35 @@ const controller = {
 	},
 	// Update - Method to update
 	update: (req, res) => {
-		const { name, price, discount, description, category, image} = req.body;
-		
-		const productModify = products.map(product => {
-			if (product.id === +req.params.id) {
-				product.name = name.trim();
-				product.price = +price;
-				product.discount = +discount;
-				product.category = category;
-				product.description = description.trim();
-				product.image= req.file.originalname;
+       const fileName = "img-sony-blueray.jpg"
+	   try{
+		file = req.file.originalname
+	   }
+	   catch(err){
+            console.log("no hay imagen");
+	   }
+	  
+	   console.log("cat",req.body.category)
+	   const modified = products.map( producto =>{
+                //console.log( producto.id == req.params.id)
+			if (producto.id == req.params.id){
+				
+				producto.name =  req.body.name
+				producto.price = req.body.price
+				producto.discount = req.body.discount
+                producto.description = req.body.description
+				producto.category = req.body.category ? req.body.category : "visited"
+				producto.image = fileName
 			}
-			return product
-		});
-		fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 3), 'utf8');
-		return res.redirect('/products');
-	},
+			return producto
+		})
 
+		 console.log(modified)
+		 writeJSON(modified,"productsDataBase.json") 
+		
+		res.redirect("/products")
+
+	},
 	// Delete - Delete one product from DB
 	destroy: (req, res) => {
 
